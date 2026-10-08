@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logbook Terminal Avsec FLZ - Synchronized Cloud System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Flatpickr for Strict DD/MM/YYYY Date Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            body {
+                margin: 0 !important;
+                padding: 10mm 12mm !important;
+                background: white !important;
+                color: black !important;
+            }
+            body > *:not(#print-root) {
+                display: none !important;
+            }
+            #print-root {
+                display: block !important;
+                visibility: visible !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+        }
+
+        .table-border-pdf th, 
+        .table-border-pdf td {
+            border: 1px solid #000000;
+            padding: 5px 7px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- LOGIN / PASSWORD PROTECTION OVERLAY -->
+    <div id="login-overlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-3xl mx-auto shadow-lg">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-100 tracking-wide">AKSES LOGBOOK TERMINAL AVSEC FLZ</h2>
+                <p class="text-xs text-slate-400">Masukkan kata sandi sesuai dengan peran akun Anda.</p>
+            </div>
+
+            <form onsubmit="window.handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Kata Sandi Akses</label>
+                    <div class="relative">
+                        <input type="password" id="input-password" placeholder="Masukkan kata sandi..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition pr-10">
+                        <button type="button" onclick="window.togglePasswordVisibility()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200 transition">
+                            <i id="toggle-pass-icon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <div id="login-error" class="hidden text-xs text-rose-400 mt-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-exclamation"></i> Kata sandi salah! Silakan coba lagi.
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk ke Sistem HBSCP
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP VERIFIKASI SUPERVISOR -->
+    <div id="supervisor-auth-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div class="text-center space-y-1.5">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl mx-auto">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-100">Akses Khusus Supervisor HBSCP</h3>
+                <p class="text-xs text-slate-400">Tindakan ini memerlukan verifikasi kata sandi Supervisor.</p>
+            </div>
+
+            <form onsubmit="window.handleSupervisorUpgrade(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Kata Sandi Supervisor</label>
+                    <input type="password" id="input-supervisor-pass" placeholder="Masukkan sandi Supervisor..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                    <div id="supervisor-error" class="hidden text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-exclamation"></i> Sandi Supervisor salah!
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <button type="button" onclick="window.closeSupervisorModal()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="w-1/2 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold transition shadow-lg">
+                        Verifikasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP PENGATURAN CLOUD FIREBASE -->
+    <div id="firebase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl">
+                        <i class="fa-solid fa-cloud"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-100">Pengaturan Cloud Firebase HBSCP Sync</h3>
+                        <p class="text-xs text-slate-400">Sinkronisasi multi-device via Firebase Realtime Database / Firestore.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeFirebaseConfigModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-300">
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                    <span class="font-semibold text-emerald-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info"></i> Info Project Realtime:
+                    </span>
+                    <p id="firebase-project-domain" class="text-slate-300 font-mono text-[11px] pt-1">logbook-terminal.firebaseapp.com</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-200 mb-1">Firebase Web Config (JSON):</label>
+                    <textarea id="input-firebase-config" rows="6" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-500 transition resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="window.resetFirebaseConfig()" class="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-semibold transition">
+                    Reset Default
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="window.closeFirebaseConfigModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+                        Batal
+                    </button>
+                    <button type="button" onclick="window.saveFirebaseConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition shadow-lg flex items-center gap-1.5">
+                        <i class="fa-solid fa-plug"></i> Simpan & Hubungkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-navy-950/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-100 leading-tight flex items-center gap-2">
+                        SISTEM LOGBOOK TERMINAL AVSEC FLZ
+                    </h1>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <!-- Realtime Cloud Sync Status Badge -->
+                <button id="sync-status-badge" onclick="window.openFirebaseConfigModal()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 hover:bg-emerald-500/20 transition cursor-pointer" title="Klik untuk atur Firebase Cloud Sync">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <i class="fa-solid fa-rotate text-xs"></i>
+                    <span id="sync-status-text">Connecting Cloud...</span>
+                    <i class="fa-solid fa-gear text-[10px] opacity-70 ml-0.5"></i>
+                </button>
+
+                <!-- User Role Badge -->
+                <div id="user-role-badge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user text-blue-400"></i>
+                    <span id="user-role-name">Personel</span>
+                </div>
+
+                <button onclick="window.lockApp()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/40 hover:border-rose-500/40 border border-slate-700 text-slate-300 hover:text-rose-300 text-xs font-medium transition flex items-center gap-1.5" title="Kunci Sistem">
+                    <i class="fa-solid fa-lock text-slate-400 hover:text-rose-400"></i> Kunci Sistem
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center gap-2 border-b border-slate-800 pb-3 no-print overflow-x-auto">
+            <button id="tab-btn-form" onclick="window.switchTab('form')" class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 bg-emerald-600 text-white whitespace-nowrap">
+                <i class="fa-solid fa-pen-to-square"></i> Input Logbook Terminal
+            </button>
+            <button id="tab-btn-preview" onclick="window.switchTab('preview')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+                <i class="fa-solid fa-file-pdf"></i> Pratinjau Document PDF
+            </button>
+            <button id="tab-btn-recap" onclick="window.switchTab('recap')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+                <i class="fa-solid fa-chart-line"></i> Rekapan Bulanan
+                <i id="recap-lock-icon" class="fa-solid fa-eye text-[10px] text-blue-400 ml-0.5"></i>
+            </button>
+            <button id="tab-btn-history" onclick="window.switchTab('history')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+                <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Logbook
+                <i id="history-lock-icon" class="fa-solid fa-eye text-[10px] text-blue-400 ml-0.5"></i>
+            </button>
+        </div>
+
+        <!-- ================= TAB 1: FORM LOGBOOK ================= -->
+        <section id="tab-content-form" class="space-y-6">
+            
+            <!-- Edit Mode Notice Banner -->
+            <div id="edit-mode-banner" class="hidden p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-amber-300 text-xs shadow-lg backdrop-blur">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold">Mode Mengedit Riwayat Logbook</span>
+                        <p class="text-[11px] text-amber-300/80">Perubahan yang Anda simpan akan otomatis memperbarui data di semua perangkat.</p>
+                    </div>
+                </div>
+                <button onclick="window.cancelEditMode()" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 text-xs font-semibold transition">
+                    Batal & Buat Baru
+                </button>
+            </div>
+
+            <!-- Header Card: AREA and Tanggal -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">AREA</label>
+                    <select id="input-pos" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                        <option value="HBSCP" selected>HBSCP</option>
+                        <option value="PSCP">PSCP</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tanggal</label>
+                    <div class="relative">
+                        <input type="text" id="input-tanggal" placeholder="dd/mm/yyyy" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition cursor-pointer">
+                        <i class="fa-regular fa-calendar-days absolute right-3 top-2.5 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 1: PETUGAS JAGA TERMINAL -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> 1. Daftar Petugas Jaga Terminal
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.resetPetugasData()" class="px-3 py-1.5 text-xs font-medium bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Data
+                        </button>
+                        <button onclick="window.addPetugasRow()" class="px-3 py-1.5 text-xs font-medium bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Tambah Petugas
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900/80 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            <tr>
+                                <th class="p-3 w-12 text-center">NO</th>
+                                <th class="p-3">NAMA PETUGAS</th>
+                                <th class="p-3">JABATAN</th>
+                                <th class="p-3">KETERANGAN</th>
+                                <th class="p-3 w-20 text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="petugas-table-body" class="divide-y divide-slate-700/50 text-slate-200">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 2: URAIAN KEGIATAN -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check"></i> 2. Uraian Kegiatan
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.resetKegiatanData()" class="px-3 py-1.5 text-xs font-medium bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Data
+                        </button>
+                        <button onclick="window.addKegiatanRow()" class="px-3 py-1.5 text-xs font-medium bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Tambah Kegiatan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900/80 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            <tr>
+                                <th class="p-3 w-32">WAKTU</th>
+                                <th class="p-3">URAIAN KEGIATAN</th>
+                                <th class="p-3 w-16 text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kegiatan-table-body" class="divide-y divide-slate-700/50 text-slate-200">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 3: CATATAN -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-note-sticky"></i> 3. Catatan
+                    </h2>
+                    <button onclick="window.clearCatatanData()" class="px-3 py-1.5 text-xs font-medium bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left"></i> Kosongkan
+                    </button>
+                </div>
+                <textarea id="input-catatan" rows="3" placeholder="Tuliskan catatan atau pesan penting (opsional)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition resize-y"></textarea>
+            </div>
+
+            <!-- SECTION 4: PENGESAHAN -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl">
+                <h2 class="text-base font-semibold text-emerald-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-signature"></i> 4. Pengesahan
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+                    <!-- 1. KANIT AVSEC -->
+                    <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/70 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-bold text-slate-200 uppercase tracking-wide">KANIT AVSEC</label>
+                                <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Kanit AVSEC</span>
+                            </div>
+                            <input type="text" id="sign-mengetahui" placeholder="Nama Kanit AVSEC" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 mb-2">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1 flex justify-between items-center">
+                                <span>Goreskan Tanda Tangan:</span>
+                                <button type="button" onclick="window.clearSignature('mengetahui')" class="text-[10px] text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset
+                                </button>
+                            </label>
+                            <div class="relative bg-white rounded-lg overflow-hidden border border-slate-600 shadow-inner">
+                                <canvas id="canvas-mengetahui" width="220" height="160" class="w-full h-36 bg-white cursor-crosshair touch-none"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. SUPERVISOR -->
+                    <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/70 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-bold text-slate-200 uppercase tracking-wide">SUPERVISOR</label>
+                                <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Supervisor</span>
+                            </div>
+                            <input type="text" id="sign-supervisor" placeholder="Nama Supervisor" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 mb-2">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1 flex justify-between items-center">
+                                <span>Goreskan Tanda Tangan:</span>
+                                <button type="button" onclick="window.clearSignature('supervisor')" class="text-[10px] text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset
+                                </button>
+                            </label>
+                            <div class="relative bg-white rounded-lg overflow-hidden border border-slate-600 shadow-inner">
+                                <canvas id="canvas-supervisor" width="220" height="160" class="w-full h-36 bg-white cursor-crosshair touch-none"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Form Submit Controls -->
+            <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                <button onclick="window.saveLocalDraft()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk text-slate-400"></i> Simpan Draf
+                </button>
+                <button onclick="window.switchTab('preview')" class="px-5 py-2.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-eye text-blue-400"></i> Pratinjau PDF
+                </button>
+                <button onclick="window.submitLogbookData()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition shadow-lg shadow-emerald-900/40 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Simpan & Sinkronkan Perangkat
+                </button>
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 2: PRATINJAU PDF / PRINT ================= -->
+        <section id="tab-content-preview" class="hidden space-y-4">
+            
+            <div class="flex items-center justify-between bg-slate-800/80 p-4 rounded-xl border border-slate-700 no-print">
+                <div>
+                    <h3 class="font-semibold text-slate-100">Pratinjau Format PDF (A4 Format)</h3>
+                    <p class="text-xs text-slate-400">Desain 1:1 sesuai dengan templat dokumen LOGBOOK TERMINAL beserta Tanda Tangan.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.printSingleLogbook()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Sheet Area -->
+            <div class="bg-white text-black p-8 rounded-lg shadow-2xl max-w-4xl mx-auto font-sans" id="printable-logbook">
+                
+                <!-- HEADER AREA & TANGGAL -->
+                <div class="border-2 border-black mb-4 p-2 text-center">
+                    <h2 class="text-xl font-bold uppercase tracking-wider" id="pdf-area-title">LOGBOOK HBSCP</h2>
+                    <div class="flex justify-end items-center mt-2 font-bold text-sm px-4">
+                        <div>TANGGAL: <span id="pdf-tanggal-val">06/10/2026</span></div>
+                    </div>
+                </div>
+
+                <!-- TABLE 1: PETUGAS -->
+                <div class="mb-4">
+                    <table class="w-full table-border-pdf">
+                        <thead>
+                            <tr class="bg-gray-100 font-bold">
+                                <th class="w-10 text-center">NO</th>
+                                <th>PETUGAS JAGA TERMINAL</th>
+                                <th>JABATAN</th>
+                                <th>KETERANGAN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdf-petugas-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TABLE 2: URAIAN KEGIATAN -->
+                <div class="mb-4">
+                    <table class="w-full table-border-pdf">
+                        <thead>
+                            <tr class="bg-gray-100 font-bold">
+                                <th class="w-24 text-center">WAKTU</th>
+                                <th>URAIAN KEGIATAN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdf-kegiatan-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TABLE 3: CATATAN -->
+                <div class="mb-6">
+                    <table class="w-full table-border-pdf">
+                        <thead>
+                            <tr class="bg-gray-100 font-bold">
+                                <th class="text-left">CATATAN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="pdf-catatan-val" class="whitespace-pre-wrap text-xs py-2 text-left min-h-[35px]">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FOOTER / PENGESAHAN DENGAN PRATINJAU GAMBAR TANDA TANGAN (2 Column) -->
+                <div class="mt-8 border-t border-black pt-4">
+                    <table class="w-full text-center table-border-pdf">
+                        <thead>
+                            <tr class="bg-gray-100 font-bold">
+                                <th class="w-1/2">KANIT AVSEC</th>
+                                <th class="w-1/2">SUPERVISOR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <!-- KANIT AVSEC -->
+                                <td class="h-36 align-bottom pb-2">
+                                    <div class="h-28 flex items-center justify-center">
+                                        <img id="pdf-img-mengetahui" class="max-h-24 max-w-full object-contain hidden" alt="Signature">
+                                        <span id="pdf-nosign-mengetahui" class="text-xs text-gray-400 italic">(Belum TTD)</span>
+                                    </div>
+                                    <div class="font-bold border-t border-gray-400 pt-1" id="pdf-sign-mengetahui">#N/A</div>
+                                </td>
+
+                                <!-- SUPERVISOR -->
+                                <td class="h-36 align-bottom pb-2">
+                                    <div class="h-28 flex items-center justify-center">
+                                        <img id="pdf-img-supervisor" class="max-h-24 max-w-full object-contain hidden" alt="Signature">
+                                        <span id="pdf-nosign-supervisor" class="text-xs text-gray-400 italic">(Belum TTD)</span>
+                                    </div>
+                                    <div class="font-bold border-t border-gray-400 pt-1" id="pdf-sign-supervisor">#N/A</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 3: REKAPAN BULANAN ================= -->
+        <section id="tab-content-recap" class="hidden space-y-6">
+            
+            <!-- Filter Bar & Actions -->
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 no-print">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Bulan</label>
+                        <select id="recap-month" onchange="window.filterMonthlyRecap()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10" selected>Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Tahun</label>
+                        <select id="recap-year" onchange="window.filterMonthlyRecap()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">AREA</label>
+                        <select id="recap-pos" onchange="window.filterMonthlyRecap()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                            <option value="ALL">Semua AREA</option>
+                            <option value="HBSCP">HBSCP</option>
+                            <option value="PSCP">PSCP</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="btn-recap-print" onclick="window.printMonthlyRecap()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-lg flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i> Cetak Rekapan Bulanan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detailed Monthly Log Table -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl no-print">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-table-list"></i> Rincian Logbook Bulanan
+                    </h2>
+                    <span class="text-xs text-slate-400 font-mono" id="recap-period-label">Periode: OKTOBER 2026</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            <tr>
+                                <th class="p-3 w-12 text-center">NO</th>
+                                <th class="p-3">TANGGAL</th>
+                                <th class="p-3">AREA</th>
+                                <th class="p-3">PETUGAS JAGA</th>
+                                <th class="p-3 text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recap-table-body" class="divide-y divide-slate-700/50 text-slate-200">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 4: RIWAYAT LOGBOOK ================= -->
+        <section id="tab-content-history" class="hidden space-y-4">
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-history"></i> Riwayat Pengiriman Logbook (Realtime Cloud Sync)
+                    </h2>
+                    <button id="btn-clear-history" onclick="window.clearHistory()" class="px-3 py-1 text-xs bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded transition">
+                        Hapus Semua Riwayat
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900 text-xs font-semibold text-slate-300 uppercase">
+                            <tr>
+                                <th class="p-3">AREA</th>
+                                <th class="p-3">TANGGAL LOG</th>
+                                <th class="p-3">PETUGAS JAGA</th>
+                                <th class="p-3 text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="divide-y divide-slate-700/50">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- TOAST NOTIFICATION SYSTEM -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ISOLATED PRINT ROOT CONTAINER FOR BROWSER PRINTING -->
+    <div id="print-root" class="hidden font-sans text-black"></div>
+
+    <!-- APPLICATION SCRIPTS & FIREBASE REALTIME CLOUD INTEGRATION -->
+    <script type="module">
+        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Passcodes & Authentication Roles
+        const PASS_SUPERVISOR = 'SUPERVISOR123';
+        const PASS_PERSONEL = 'PERSONEL123';
+        const PASS_PERSONEL_ALT = 'SECURITY123';
+
+        // Default Firebase Config for logbook-terminal
+        const DEFAULT_FIREBASE_CONFIG = {
+             "apiKey": "AIzaSyAaaa4F6YiNM1rtYE10-YlpjXJ-cicP8-A",
+             "authDomain": "logbook-terminal.firebaseapp.com",
+             "projectId": "logbook-terminal",
+             "storageBucket": "logbook-terminal.firebasestorage.app",
+             "messagingSenderId": "362325475908",
+             "appId": "1:362325475908:web:169cd71f477cb1f325f211"
+        };
+
+        // Signature Canvas Role Definitions
+        window.sigRoles = ['mengetahui', 'supervisor'];
+        const sigRoles = window.sigRoles;
+        window.signaturePads = {};
+        const signaturePads = window.signaturePads;
+
+        // Active Form State Data (Default Petugas Data Blank / Kosong)
+        let petugasData = [
+            { nama: '', jabatan: '', keterangan: 'HADIR' }
+        ];
+        let kegiatanData = [
+            { waktu: '', uraian: '' }
+        ];
+
+        let datePickerInstance = null;
+        let editingHistoryIndex = null;
+        let originalLogKey = null;
+        let editingDocId = null;
+        let targetTabAfterAuth = null;
+
+        // Global Firebase Environment Setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'pos-logbook-app';
+        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app = null;
+        let auth = null;
+        let db = null;
+
+        let currentUser = null;
+        let unsubLogs = null;
+        let cloudLogs = []; // Global in-memory list synced via Firestore
+
+        function getActiveFirebaseConfig() {
+            const localConfigStr = localStorage.getItem('POS_LOGBOOK_FIREBASE_CONFIG');
+            if (localConfigStr) {
+                try {
+                    const parsed = JSON.parse(localConfigStr);
+                    // Jika localstorage berisi projectId lama 'logbook-pos-avsec', hapus otomatis cache lama
+                    if (parsed && parsed.projectId === 'logbook-pos-avsec') {
+                        localStorage.removeItem('POS_LOGBOOK_FIREBASE_CONFIG');
+                        return DEFAULT_FIREBASE_CONFIG;
+                    }
+                    return parsed;
+                } catch(e) { console.error("Error parsing stored Firebase config:", e); }
+            }
+
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    return JSON.parse(__firebase_config);
+                } catch(e) { console.error("Error parsing __firebase_config:", e); }
+            }
+
+            return DEFAULT_FIREBASE_CONFIG;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            checkAuthentication();
+            initSignaturePads();
+
+            const dateInput = document.getElementById('input-tanggal');
+            if (dateInput) {
+                datePickerInstance = flatpickr(dateInput, {
+                    dateFormat: "d/m/Y",
+                    defaultDate: new Date(),
+                    locale: "id",
+                    disableMobile: true
+                });
+            }
+
+            renderPetugasTable();
+            renderKegiatanTable();
+
+            loadLocalDraft();
+
+            await initCloudAuth();
+        });
+
+        async function initCloudAuth() {
+            const config = getActiveFirebaseConfig();
+
+            // Update label domain realtime di UI secara dinamis
+            const domainInfo = document.getElementById('firebase-project-domain');
+            if (domainInfo && config) {
+                domainInfo.innerText = config.authDomain || `${config.projectId}.firebaseapp.com`;
+            }
+
+            if (!config || !config.apiKey) {
+                updateSyncStatus(false, "Klik Atur Firebase Cloud");
+                loadLocalHistoryFallback();
+                return;
+            }
+
+            try {
+                if (unsubLogs) {
+                    unsubLogs();
+                    unsubLogs = null;
+                }
+
+                if (app) {
+                    await deleteApp(app);
+                }
+
+                app = initializeApp(config, 'logbookApp_' + Date.now());
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                try {
+                    if (authToken) {
+                        const userCred = await signInWithCustomToken(auth, authToken);
+                        currentUser = userCred.user;
+                    } else {
+                        const userCred = await signInAnonymously(auth);
+                        currentUser = userCred.user;
+                    }
+                } catch (authErr) {
+                    console.warn("Auth attempt warning:", authErr);
+                }
+
+                subscribeToCloudLogs();
+            } catch (err) {
+                console.error("Firebase Auth Error:", err);
+                updateSyncStatus(false, "Gagal Koneksi Cloud");
+                loadLocalHistoryFallback();
+            }
+        }
+
+        function subscribeToCloudLogs() {
+            if (!db) return;
+
+            const logsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'logs');
+
+            unsubLogs = onSnapshot(logsCollection, (snapshot) => {
+                let synced = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    synced.push({
+                        docId: docSnap.id,
+                        timestamp: data.timestamp || new Date().toLocaleString('id-ID'),
+                        payload: data.payload || data
+                    });
+                });
+
+                synced.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                cloudLogs = synced;
+                localStorage.setItem('POS_LOGBOOK_HISTORY', JSON.stringify(cloudLogs));
+
+                renderHistoryTable();
+                filterMonthlyRecap();
+                updateSyncStatus(true, `Cloud Active (${cloudLogs.length} Log)`);
+            }, (error) => {
+                console.error("Firestore snapshot sync error:", error);
+                updateSyncStatus(false, "Izin Rules Firestore Ditolak");
+                showToast('Firestore Error: ' + error.message, 'error');
+            });
+        }
+
+        function updateSyncStatus(isOnline, text = "") {
+            const badge = document.getElementById('sync-status-badge');
+            const label = document.getElementById('sync-status-text');
+            if (!badge || !label) return;
+
+            if (isOnline) {
+                badge.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 hover:bg-emerald-500/20 transition cursor-pointer";
+                label.innerText = text || "Cloud Active";
+            } else {
+                badge.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 hover:bg-amber-500/20 transition cursor-pointer";
+                label.innerText = text || "Offline / Local Only";
+            }
+        }
+
+        window.submitLogbookData = async function() {
+            const isEditMode = (editingDocId !== null || editingHistoryIndex !== null);
+            const posEl = document.getElementById('input-pos');
+
+            const posVal = posEl ? posEl.value : 'HBSCP';
+            const tanggalVal = document.getElementById('input-tanggal').value;
+
+            if (!tanggalVal) {
+                showToast('Tanggal wajib diisi!', 'warning');
+                return;
+            }
+
+            const payload = {
+                pos: posVal,
+                tanggal: tanggalVal,
+                petugas: petugasData,
+                kegiatan: kegiatanData,
+                catatan: document.getElementById('input-catatan').value,
+                pengesahan: {
+                    mengetahui: document.getElementById('sign-mengetahui').value,
+                    supervisor: document.getElementById('sign-supervisor').value
+                },
+                signatures: {
+                    mengetahui: getSignatureDataUrl('mengetahui'),
+                    supervisor: getSignatureDataUrl('supervisor')
+                }
+            };
+
+            let docId = editingDocId;
+            if (!docId) {
+                const cleanDate = String(tanggalVal).replace(/[/ -]/g, '');
+                const cleanPos = String(posVal).replace(/\s+/g, '_');
+                docId = `${cleanPos}_${cleanDate}_${Date.now()}`;
+            }
+
+            showToast('Menyimpan & Menyinkronkan ke seluruh perangkat...', 'info');
+
+            if (db) {
+                try {
+                    const logDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'logs', docId);
+                    await setDoc(logDocRef, {
+                        timestamp: new Date().toISOString(),
+                        payload: payload
+                    });
+                    showToast(isEditMode ? 'Logbook Berhasil Diperbarui di Semua Perangkat!' : 'Logbook Berhasil Dikirim & Tersinkronkan!', 'success');
+                    resetFormToDefault();
+                    return;
+                } catch (err) {
+                    console.error("Error saving log to Firestore:", err);
+                    showToast('Gagal Cloud (' + (err.code || 'Permission Denied') + '): ' + err.message, 'error');
+                    saveToLocalHistoryFallback(payload);
+                    resetFormToDefault();
+                    return;
+                }
+            } else {
+                saveToLocalHistoryFallback(payload);
+                showToast('Cloud belum terhubung. Tersimpan di Local Storage!', 'warning');
+                resetFormToDefault();
+            }
+        };
+
+        window.deleteCloudHistoryItem = async function(docId) {
+            if (sessionStorage.getItem('POS_LOGBOOK_ROLE') !== 'SUPERVISOR') {
+                showToast('Hanya Supervisor yang dapat menghapus riwayat logbook!', 'warning');
+                window.openSupervisorModal();
+                return;
+            }
+
+            if (!docId) return;
+
+            try {
+                if (db) {
+                    const logDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'logs', docId);
+                    await deleteDoc(logDocRef);
+                    showToast('Data logbook berhasil dihapus dari semua perangkat!', 'info');
+                } else {
+                    showToast('Gagal menghapus data dari Cloud.', 'error');
+                }
+            } catch (err) {
+                console.error("Error deleting doc from Firestore:", err);
+                showToast('Gagal menghapus data: ' + err.message, 'error');
+            }
+        };
+
+        function saveToLocalHistoryFallback(payload) {
+            let history = JSON.parse(localStorage.getItem('POS_LOGBOOK_HISTORY') || '[]');
+            const timestamp = new Date().toLocaleString('id-ID');
+            history.unshift({
+                docId: 'local_' + Date.now(),
+                timestamp: timestamp,
+                payload: payload
+            });
+            localStorage.setItem('POS_LOGBOOK_HISTORY', JSON.stringify(history));
+            cloudLogs = history;
+            renderHistoryTable();
+            filterMonthlyRecap();
+        }
+
+        function loadLocalHistoryFallback() {
+            const saved = localStorage.getItem('POS_LOGBOOK_HISTORY');
+            if (saved) {
+                try {
+                    cloudLogs = JSON.parse(saved);
+                    renderHistoryTable();
+                    filterMonthlyRecap();
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        function checkAuthentication() {
+            const isAuth = sessionStorage.getItem('POS_LOGBOOK_AUTHENTICATED');
+            const role = sessionStorage.getItem('POS_LOGBOOK_ROLE') || 'PERSONEL';
+            const overlay = document.getElementById('login-overlay');
+            
+            if (isAuth === 'true') {
+                if (overlay) overlay.classList.add('hidden');
+                updateUserRoleBadge(role);
+            } else {
+                if (overlay) overlay.classList.remove('hidden');
+            }
+        }
+
+        function updateUserRoleBadge(role) {
+            const badgeName = document.getElementById('user-role-name');
+            const badgeIcon = document.querySelector('#user-role-badge i');
+            const badgeContainer = document.getElementById('user-role-badge');
+
+            const recapLock = document.getElementById('recap-lock-icon');
+            const historyLock = document.getElementById('history-lock-icon');
+
+            if (role === 'SUPERVISOR') {
+                if (badgeName) badgeName.innerText = 'Supervisor';
+                if (badgeIcon) badgeIcon.className = 'fa-solid fa-user-check text-amber-400';
+                if (badgeContainer) badgeContainer.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 flex items-center gap-1.5';
+                
+                if (recapLock) {
+                    recapLock.className = 'fa-solid fa-lock-open text-[10px] text-emerald-400 ml-0.5';
+                    recapLock.title = 'Akses Penuh Supervisor';
+                }
+                if (historyLock) {
+                    historyLock.className = 'fa-solid fa-lock-open text-[10px] text-emerald-400 ml-0.5';
+                    historyLock.title = 'Akses Penuh Supervisor';
+                }
+            } else {
+                if (badgeName) badgeName.innerText = 'Personel Security';
+                if (badgeIcon) badgeIcon.className = 'fa-solid fa-user text-blue-400';
+                if (badgeContainer) badgeContainer.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/30 flex items-center gap-1.5';
+
+                if (recapLock) {
+                    recapLock.className = 'fa-solid fa-eye text-[10px] text-blue-400 ml-0.5';
+                    recapLock.title = 'Akses Lihat (Personel)';
+                }
+                if (historyLock) {
+                    historyLock.className = 'fa-solid fa-eye text-[10px] text-blue-400 ml-0.5';
+                    historyLock.title = 'Akses Lihat (Personel)';
+                }
+            }
+        }
+
+        window.switchTab = function(tabName) {
+            const tabs = ['form', 'preview', 'recap', 'history'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const content = document.getElementById(`tab-content-${t}`);
+
+                if (t === tabName) {
+                    if (btn) btn.className = "tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 bg-emerald-600 text-white whitespace-nowrap";
+                    if (content) content.classList.remove('hidden');
+                } else {
+                    if (btn) btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 text-slate-400 hover:bg-slate-800 whitespace-nowrap";
+                    if (content) content.classList.add('hidden');
+                }
+            });
+
+            if (tabName === 'preview') {
+                updatePdfPreview();
+            } else if (tabName === 'recap') {
+                filterMonthlyRecap();
+            } else if (tabName === 'history') {
+                renderHistoryTable();
+            }
+        };
+
+        function renderPetugasTable() {
+            const tbody = document.getElementById('petugas-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            petugasData.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-mono text-slate-400">${idx + 1}</td>
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(p.nama)}" onchange="window.updatePetugasData(${idx}, 'nama', this.value)" placeholder="Nama Petugas" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                    </td>
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(p.jabatan)}" onchange="window.updatePetugasData(${idx}, 'jabatan', this.value)" placeholder="Jabatan" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                    </td>
+                    <td class="p-2">
+                        <select onchange="window.updatePetugasData(${idx}, 'keterangan', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                            <option value="HADIR" ${p.keterangan === 'HADIR' ? 'selected' : ''}>HADIR</option>
+                            <option value="IZIN" ${p.keterangan === 'IZIN' ? 'selected' : ''}>IZIN</option>
+                            <option value="SAKIT" ${p.keterangan === 'SAKIT' ? 'selected' : ''}>SAKIT</option>
+                            <option value="CUTI" ${p.keterangan === 'CUTI' ? 'selected' : ''}>CUTI</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <button onclick="window.deletePetugasRow(${idx})" class="px-2 py-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded text-xs transition flex items-center justify-center gap-1 mx-auto" title="Hapus Petugas Ini">
+                            <i class="fa-solid fa-trash-can text-rose-400"></i> Hapus
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.updatePetugasData = function(index, field, value) {
+            if (petugasData[index]) {
+                petugasData[index][field] = value;
+            }
+        };
+
+        window.addPetugasRow = function() {
+            petugasData.push({ nama: '', jabatan: '', keterangan: 'HADIR' });
+            renderPetugasTable();
+            showToast('Baris petugas ditambahkan', 'info');
+        };
+
+        window.deletePetugasRow = function(index) {
+            if (petugasData.length <= 1) {
+                showToast('Minimal harus ada 1 baris petugas!', 'warning');
+                return;
+            }
+            petugasData.splice(index, 1);
+            renderPetugasTable();
+            showToast('Baris petugas dihapus', 'info');
+        };
+
+        window.resetPetugasData = function() {
+            petugasData = [
+                { nama: '', jabatan: '', keterangan: 'HADIR' }
+            ];
+            renderPetugasTable();
+            showToast('Data petugas direset ke setelan awal (kosong)', 'info');
+        };
+
+        function renderKegiatanTable() {
+            const tbody = document.getElementById('kegiatan-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            kegiatanData.forEach((k, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(k.waktu)}" onchange="window.updateKegiatanData(${idx}, 'waktu', this.value)" placeholder="07:30" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-100 font-mono text-center focus:outline-none focus:border-emerald-500">
+                    </td>
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(k.uraian)}" onchange="window.updateKegiatanData(${idx}, 'uraian', this.value)" placeholder="Uraian kegiatan / kejadian..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                    </td>
+                    <td class="p-2 text-center">
+                        <button onclick="window.deleteKegiatanRow(${idx})" class="p-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded text-xs transition" title="Hapus Kegiatan">
+                            <i class="fa-solid fa-trash-can text-rose-400"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.updateKegiatanData = function(index, field, value) {
+            if (kegiatanData[index]) {
+                kegiatanData[index][field] = value;
+            }
+        };
+
+        window.addKegiatanRow = function() {
+            kegiatanData.push({ waktu: '', uraian: '' });
+            renderKegiatanTable();
+            showToast('Baris kegiatan ditambahkan', 'info');
+        };
+
+        window.deleteKegiatanRow = function(index) {
+            kegiatanData.splice(index, 1);
+            renderKegiatanTable();
+            showToast('Baris kegiatan dihapus', 'info');
+        };
+
+        window.resetKegiatanData = function() {
+            kegiatanData = [{ waktu: '', uraian: '' }];
+            renderKegiatanTable();
+            showToast('Data kegiatan direset ke setelan awal', 'info');
+        };
+
+        window.clearCatatanData = function() {
+            document.getElementById('input-catatan').value = '';
+            showToast('Catatan dikosongkan', 'info');
+        };
+
+        function initSignaturePads() {
+            sigRoles.forEach(role => {
+                const canvas = document.getElementById(`canvas-${role}`);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                let isDrawing = false;
+                let drawn = false;
+
+                function getPos(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    let clientX = e.clientX;
+                    let clientY = e.clientY;
+                    if (e.touches && e.touches.length > 0) {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    }
+                    return {
+                        x: (clientX - rect.left) * (canvas.width / rect.width),
+                        y: (clientY - rect.top) * (canvas.height / rect.height)
+                    };
+                }
+
+                function startDrawing(e) {
+                    isDrawing = true;
+                    drawn = true;
+                    const pos = getPos(e);
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                    if (e.type === 'touchstart') e.preventDefault();
+                }
+
+                function draw(e) {
+                    if (!isDrawing) return;
+                    const pos = getPos(e);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    if (e.type === 'touchmove') e.preventDefault();
+                }
+
+                function stopDrawing() {
+                    isDrawing = false;
+                }
+
+                canvas.addEventListener('mousedown', startDrawing);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseup', stopDrawing);
+                canvas.addEventListener('mouseleave', stopDrawing);
+
+                canvas.addEventListener('touchstart', startDrawing, { passive: false });
+                canvas.addEventListener('touchmove', draw, { passive: false });
+                canvas.addEventListener('touchend', stopDrawing);
+
+                signaturePads[role] = {
+                    canvas: canvas,
+                    ctx: ctx,
+                    hasDrawn: () => drawn,
+                    setHasDrawn: (val) => { drawn = val; }
+                };
+            });
+        }
+
+        function getSignatureDataUrl(role) {
+            const pad = signaturePads[role];
+            if (pad && pad.hasDrawn()) {
+                return pad.canvas.toDataURL('image/png');
+            }
+            return null;
+        }
+
+        function loadSignatureFromDataUrl(role, dataUrl) {
+            const pad = signaturePads[role];
+            if (!pad || !dataUrl) return;
+
+            const img = new Image();
+            img.onload = () => {
+                pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+                pad.ctx.drawImage(img, 0, 0, pad.canvas.width, pad.canvas.height);
+                pad.setHasDrawn(true);
+            };
+            img.src = dataUrl;
+        }
+
+        window.clearSignature = function(role, silent = false) {
+            const pad = signaturePads[role];
+            if (pad) {
+                pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+                pad.setHasDrawn(false);
+                if (!silent) showToast(`Tanda tangan ${role.toUpperCase()} dibersihkan`, 'info');
+            }
+        };
+
+        function updatePdfPreview() {
+            const posEl = document.getElementById('input-pos');
+            const area = posEl ? posEl.value : 'HBSCP';
+            const tanggalEl = document.getElementById('input-tanggal');
+            const tanggal = tanggalEl ? tanggalEl.value : '';
+            const catatanEl = document.getElementById('input-catatan');
+            const catatan = catatanEl ? catatanEl.value : '';
+
+            // Dynamically set title based on selected Area (LOGBOOK HBSCP or LOGBOOK PSCP)
+            const logbookTitle = area === 'PSCP' ? 'LOGBOOK PSCP' : 'LOGBOOK HBSCP';
+            const pdfAreaTitle = document.getElementById('pdf-area-title');
+            if (pdfAreaTitle) pdfAreaTitle.innerText = logbookTitle;
+
+            const pdfTanggalVal = document.getElementById('pdf-tanggal-val');
+            if (pdfTanggalVal) pdfTanggalVal.innerText = tanggal ? formatDateIndo(tanggal) : '-';
+
+            const pdfCatatanVal = document.getElementById('pdf-catatan-val');
+            if (pdfCatatanVal) pdfCatatanVal.innerText = catatan ? catatan.trim() : '-';
+
+            // Petugas PDF Table
+            const pdfPetugasBody = document.getElementById('pdf-petugas-body');
+            if (pdfPetugasBody) {
+                pdfPetugasBody.innerHTML = '';
+                if (petugasData.length === 0) {
+                    pdfPetugasBody.innerHTML = '<tr><td colspan="4" class="text-center">#N/A</td></tr>';
+                } else {
+                    petugasData.forEach((p, i) => {
+                        pdfPetugasBody.innerHTML += `
+                            <tr>
+                                <td class="text-center font-mono">${i + 1}</td>
+                                <td class="font-semibold">${escapeHtml(p.nama) || '#N/A'}</td>
+                                <td>${escapeHtml(p.jabatan)}</td>
+                                <td>${escapeHtml(p.keterangan)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+
+            // Kegiatan PDF Table
+            const pdfKegBody = document.getElementById('pdf-kegiatan-body');
+            if (pdfKegBody) {
+                pdfKegBody.innerHTML = '';
+                if (kegiatanData.length === 0) {
+                    pdfKegBody.innerHTML = '<tr><td colspan="2" class="text-center">#N/A</td></tr>';
+                } else {
+                    kegiatanData.forEach((k) => {
+                        pdfKegBody.innerHTML += `
+                            <tr>
+                                <td class="text-center font-mono font-semibold">${escapeHtml(k.waktu)}</td>
+                                <td>${escapeHtml(k.uraian) || '#N/A'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+
+            // Pengesahan Nama & Gambar Tanda Tangan
+            sigRoles.forEach(role => {
+                const signInput = document.getElementById(`sign-${role}`);
+                const nameVal = signInput ? signInput.value : '';
+                const pdfSignEl = document.getElementById(`pdf-sign-${role}`);
+                if (pdfSignEl) pdfSignEl.innerText = nameVal || '#N/A';
+
+                const sigUrl = getSignatureDataUrl(role);
+                const imgEl = document.getElementById(`pdf-img-${role}`);
+                const nosignEl = document.getElementById(`pdf-nosign-${role}`);
+
+                if (imgEl) {
+                    if (sigUrl) {
+                        imgEl.src = sigUrl;
+                        imgEl.classList.remove('hidden');
+                        if (nosignEl) nosignEl.classList.add('hidden');
+                    } else {
+                        imgEl.classList.add('hidden');
+                        if (nosignEl) nosignEl.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        window.printSingleLogbook = function() {
+            try {
+                updatePdfPreview();
+                const printableContent = document.getElementById('printable-logbook').innerHTML;
+                const posEl = document.getElementById('input-pos');
+                const areaVal = posEl ? posEl.value : 'HBSCP';
+                const dateVal = document.getElementById('input-tanggal') ? document.getElementById('input-tanggal').value : '';
+                const cleanDate = dateVal.replace(/[/ -]/g, '-');
+                const title = `LOGBOOK_${areaVal}_${cleanDate}`;
+                
+                fallbackPopupPrint(printableContent, title);
+                showToast(`Jendela cetak LOGBOOK ${areaVal} dibuka!`, 'success');
+            } catch (err) {
+                console.error("Error printing logbook:", err);
+                showToast("Gagal mencetak dokumen: " + err.message, "error");
+            }
+        };
+
+        function fallbackPopupPrint(htmlContent, title) {
+            try {
+                const printWin = window.open('', '_blank', 'width=900,height=800');
+                if (printWin) {
+                    printWin.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>${title}</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style>
+                                @media print {
+                                    @page { size: A4 portrait; margin: 0; }
+                                    body { margin: 0 !important; padding: 10mm 12mm !important; background: white !important; color: black !important; font-family: sans-serif; }
+                                    .page-break { page-break-after: always !important; break-after: page !important; }
+                                    .no-print { display: none !important; }
+                                }
+                                .table-border-pdf th, .table-border-pdf td {
+                                    border: 1px solid #000000;
+                                    padding: 5px 7px;
+                                    font-size: 11px;
+                                }
+                            </style>
+                        </head>
+                        <body class="bg-white text-black font-sans">
+                            ${htmlContent}
+                            <script>
+                                window.onload = function() {
+                                    setTimeout(function() { window.print(); }, 300);
+                                };
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
+                    printWin.document.close();
+                } else {
+                    directWindowPrint(htmlContent);
+                }
+            } catch (e) {
+                directWindowPrint(htmlContent);
+            }
+        }
+
+        function directWindowPrint(htmlContent) {
+            const printRoot = document.getElementById('print-root');
+            printRoot.innerHTML = `<div class="bg-white text-black p-4 font-sans">${htmlContent}</div>`;
+            printRoot.classList.remove('hidden');
+
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    printRoot.classList.add('hidden');
+                }, 500);
+            }, 200);
+        }
+
+        function getFilteredRecapData() {
+            const selectedMonth = parseInt(document.getElementById('recap-month').value);
+            const selectedYear = parseInt(document.getElementById('recap-year').value);
+            const selectedPos = document.getElementById('recap-pos').value;
+
+            let filtered = [];
+            
+            cloudLogs.forEach(item => {
+                if (!item || !item.payload || !item.payload.tanggal) return;
+
+                const p = item.payload;
+                let logYear = null;
+                let logMonth = null;
+
+                const strDate = String(p.tanggal).trim().split('T')[0];
+
+                if (strDate.includes('-')) {
+                    const parts = strDate.split('-');
+                    if (parts[0].length === 4) { // YYYY-MM-DD
+                        logYear = parseInt(parts[0], 10);
+                        logMonth = parseInt(parts[1], 10);
+                    } else if (parts[2].length === 4) { // DD-MM-YYYY
+                        logYear = parseInt(parts[2], 10);
+                        logMonth = parseInt(parts[1], 10);
+                    }
+                } else if (strDate.includes('/')) {
+                    const parts = strDate.split('/');
+                    if (parts[2] && parts[2].length === 4) { // DD/MM/YYYY
+                        logYear = parseInt(parts[2], 10);
+                        logMonth = parseInt(parts[1], 10);
+                    } else if (parts[0] && parts[0].length === 4) { // YYYY/MM/DD
+                        logYear = parseInt(parts[0], 10);
+                        logMonth = parseInt(parts[1], 10);
+                    }
+                }
+
+                if (logYear !== null && logMonth !== null) {
+                    const matchMonth = (logMonth === selectedMonth);
+                    const matchYear = (logYear === selectedYear);
+                    const matchPos = (selectedPos === 'ALL' || p.pos === selectedPos);
+
+                    if (matchMonth && matchYear && matchPos) {
+                        filtered.push(item);
+                    }
+                }
+            });
+
+            return filtered;
+        }
+
+        window.filterMonthlyRecap = function() {
+            const tbody = document.getElementById('recap-table-body');
+            const periodLabel = document.getElementById('recap-period-label');
+            
+            const monthSelect = document.getElementById('recap-month');
+            const yearSelect = document.getElementById('recap-year');
+            const posSelect = document.getElementById('recap-pos');
+
+            if (!monthSelect || !yearSelect || !tbody) return;
+
+            const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+            const monthIdx = parseInt(monthSelect.value) - 1;
+            const monthText = monthNames[monthIdx] || '';
+            const yearText = yearSelect.value || '';
+            const posText = posSelect.value === 'ALL' ? 'SEMUA AREA' : posSelect.value;
+
+            if (periodLabel) {
+                periodLabel.innerText = `Periode: ${monthText} ${yearText} (${posText})`;
+            }
+
+            const currentFilteredRecap = getFilteredRecapData();
+            tbody.innerHTML = '';
+
+            if (currentFilteredRecap.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">Tidak ada data logbook untuk periode ini.</td></tr>`;
+                return;
+            }
+
+            const isSupervisor = (sessionStorage.getItem('POS_LOGBOOK_ROLE') === 'SUPERVISOR');
+
+            currentFilteredRecap.forEach((item, idx) => {
+                const p = item.payload || item;
+                const petugasText = (p.petugas || []).map(pet => pet.nama).filter(Boolean).join(', ') || '-';
+
+                const actionHtml = isSupervisor 
+                    ? `<button onclick="window.loadCloudRecapItem('${item.docId}')" class="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded text-xs transition flex items-center gap-1 mx-auto">
+                           <i class="fa-solid fa-folder-open"></i> Buka / Edit
+                       </button>`
+                    : `<button onclick="window.openSupervisorModal()" class="px-2.5 py-1 bg-slate-800 text-slate-500 border border-slate-700 rounded text-xs transition flex items-center gap-1 mx-auto cursor-not-allowed" title="Akses Khusus Supervisor">
+                           <i class="fa-solid fa-lock text-amber-400"></i> Terkunci
+                       </button>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-mono text-slate-400">${idx + 1}</td>
+                    <td class="p-3 font-mono text-xs">${escapeHtml(formatDateIndo(p.tanggal))}</td>
+                    <td class="p-3 font-medium text-emerald-400">${escapeHtml(p.pos || 'HBSCP')}</td>
+                    <td class="p-3 text-slate-300 text-xs max-w-xs truncate">${escapeHtml(petugasText)}</td>
+                    <td class="p-3 text-center">${actionHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.loadCloudRecapItem = function(docId) {
+            if (sessionStorage.getItem('POS_LOGBOOK_ROLE') !== 'SUPERVISOR') {
+                showToast('Hanya Supervisor yang dapat mengedit riwayat logbook!', 'warning');
+                window.openSupervisorModal();
+                return;
+            }
+
+            const targetItem = cloudLogs.find(l => l.docId === docId);
+            if (!targetItem) return;
+
+            editingDocId = docId;
+            const draft = targetItem.payload;
+
+            const posEl = document.getElementById('input-pos');
+
+            if (posEl) posEl.value = draft.pos || 'HBSCP';
+
+            if (datePickerInstance && draft.tanggal) {
+                datePickerInstance.setDate(draft.tanggal);
+            } else {
+                document.getElementById('input-tanggal').value = draft.tanggal || '';
+            }
+
+            document.getElementById('input-catatan').value = draft.catatan || '';
+            petugasData = draft.petugas || [];
+            kegiatanData = draft.kegiatan || [];
+
+            if (draft.pengesahan) {
+                document.getElementById('sign-mengetahui').value = draft.pengesahan.mengetahui || '';
+                if (document.getElementById('sign-supervisor')) {
+                    document.getElementById('sign-supervisor').value = draft.pengesahan.supervisor || draft.pengesahan.danru || '';
+                }
+            }
+
+            if (draft.signatures) {
+                sigRoles.forEach(role => {
+                    const sigData = draft.signatures[role] || (role === 'supervisor' ? draft.signatures.danru : null);
+                    if (sigData) {
+                        loadSignatureFromDataUrl(role, sigData);
+                    } else {
+                        window.clearSignature(role, true);
+                    }
+                });
+            }
+
+            renderPetugasTable();
+            renderKegiatanTable();
+            updateEditBanner();
+            window.switchTab('form');
+            showToast('Data logbook dimuat dalam Mode Edit!', 'info');
+        };
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (cloudLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Belum ada riwayat pengiriman logbook.</td></tr>`;
+                return;
+            }
+
+            const isSupervisor = (sessionStorage.getItem('POS_LOGBOOK_ROLE') === 'SUPERVISOR');
+
+            const clearBtn = document.getElementById('btn-clear-history');
+            if (clearBtn) {
+                if (isSupervisor) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            cloudLogs.forEach((item, idx) => {
+                const p = item.payload || item;
+                const petugasText = (p.petugas || []).map(pet => pet.nama).filter(Boolean).join(', ') || '-';
+
+                const actionHtml = isSupervisor ? `
+                    <div class="flex items-center justify-center gap-1.5">
+                        <button onclick="window.loadCloudRecapItem('${item.docId}')" class="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded text-xs transition flex items-center gap-1">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                        <button onclick="window.deleteCloudHistoryItem('${item.docId}')" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded text-xs transition flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> Hapus
+                        </button>
+                    </div>` : `
+                    <button onclick="window.openSupervisorModal()" class="px-2.5 py-1 bg-slate-800 text-slate-500 border border-slate-700 rounded text-xs transition flex items-center gap-1 mx-auto cursor-not-allowed" title="Akses Khusus Supervisor">
+                        <i class="fa-solid fa-lock text-amber-400"></i> Terkunci
+                    </button>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-emerald-400">${escapeHtml(p.pos || 'HBSCP')}</td>
+                    <td class="p-3 font-mono text-xs">${escapeHtml(formatDateIndo(p.tanggal) || '-')}</td>
+                    <td class="p-3 text-slate-300 text-xs max-w-xs truncate">${escapeHtml(petugasText)}</td>
+                    <td class="p-3 text-center">${actionHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.clearHistory = async function() {
+            if (sessionStorage.getItem('POS_LOGBOOK_ROLE') !== 'SUPERVISOR') {
+                showToast('Hanya Supervisor yang dapat menghapus semua riwayat!', 'warning');
+                window.openSupervisorModal();
+                return;
+            }
+
+            showToast('Menghapus riwayat cloud...', 'info');
+            try {
+                for (const item of cloudLogs) {
+                    if (item.docId && db) {
+                        const logDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'logs', item.docId);
+                        await deleteDoc(logDocRef);
+                    }
+                }
+                localStorage.removeItem('POS_LOGBOOK_HISTORY');
+                showToast('Semua riwayat berhasil dihapus', 'info');
+            } catch (err) {
+                console.error("Error clearing history:", err);
+                showToast("Gagal menghapus riwayat: " + err.message, "error");
+            }
+        };
+
+        window.saveLocalDraft = function() {
+            const posEl = document.getElementById('input-pos');
+
+            const draft = {
+                pos: posEl ? posEl.value : 'HBSCP',
+                tanggal: document.getElementById('input-tanggal').value,
+                petugas: petugasData,
+                kegiatan: kegiatanData,
+                catatan: document.getElementById('input-catatan').value,
+                pengesahan: {
+                    mengetahui: document.getElementById('sign-mengetahui').value,
+                    supervisor: document.getElementById('sign-supervisor').value
+                },
+                signatures: {
+                    mengetahui: getSignatureDataUrl('mengetahui'),
+                    supervisor: getSignatureDataUrl('supervisor')
+                }
+            };
+
+            localStorage.setItem('POS_LOGBOOK_DRAFT', JSON.stringify(draft));
+            showToast('Draf logbook tersimpan di perangkat!', 'success');
+        };
+
+        function loadLocalDraft() {
+            const saved = localStorage.getItem('POS_LOGBOOK_DRAFT');
+            if (!saved) return;
+
+            try {
+                const draft = JSON.parse(saved);
+                const posEl = document.getElementById('input-pos');
+
+                if (draft.pos && posEl) posEl.value = draft.pos;
+                if (draft.tanggal) {
+                    if (datePickerInstance) {
+                        datePickerInstance.setDate(draft.tanggal);
+                    } else {
+                        document.getElementById('input-tanggal').value = draft.tanggal;
+                    }
+                }
+                if (draft.catatan) {
+                    document.getElementById('input-catatan').value = draft.catatan;
+                }
+                if (Array.isArray(draft.petugas) && draft.petugas.length > 0) {
+                    petugasData = draft.petugas;
+                }
+                if (Array.isArray(draft.kegiatan) && draft.kegiatan.length > 0) {
+                    kegiatanData = draft.kegiatan;
+                }
+                if (draft.pengesahan) {
+                    if (document.getElementById('sign-mengetahui')) document.getElementById('sign-mengetahui').value = draft.pengesahan.mengetahui || '';
+                    if (document.getElementById('sign-supervisor')) document.getElementById('sign-supervisor').value = draft.pengesahan.supervisor || draft.pengesahan.danru || '';
+                }
+                if (draft.signatures) {
+                    sigRoles.forEach(role => {
+                        const sigData = draft.signatures[role] || (role === 'supervisor' ? draft.signatures.danru : null);
+                        if (sigData) {
+                            loadSignatureFromDataUrl(role, sigData);
+                        }
+                    });
+                }
+                renderPetugasTable();
+                renderKegiatanTable();
+            } catch (e) {
+                console.error("Error loading draft:", e);
+            }
+        }
+
+        window.cancelEditMode = function() {
+            resetFormToDefault();
+            showToast('Mode edit dibatalkan. Form dikembalikan ke mode baru.', 'info');
+        };
+
+        function resetFormToDefault() {
+            editingHistoryIndex = null;
+            editingDocId = null;
+            originalLogKey = null;
+            updateEditBanner();
+
+            const posEl = document.getElementById('input-pos');
+            if (posEl) posEl.value = 'HBSCP';
+
+            if (datePickerInstance) {
+                datePickerInstance.setDate(new Date());
+            } else {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('input-tanggal').value = today;
+            }
+
+            petugasData = [
+                { nama: '', jabatan: '', keterangan: 'HADIR' }
+            ];
+
+            kegiatanData = [{ waktu: '', uraian: '' }];
+
+            document.getElementById('input-catatan').value = '';
+
+            sigRoles.forEach(role => {
+                const inputEl = document.getElementById(`sign-${role}`);
+                if (inputEl) inputEl.value = '';
+                window.clearSignature(role, true);
+            });
+
+            localStorage.removeItem('POS_LOGBOOK_DRAFT');
+
+            renderPetugasTable();
+            renderKegiatanTable();
+        }
+
+        function updateEditBanner() {
+            const banner = document.getElementById('edit-mode-banner');
+            if (!banner) return;
+            if (editingDocId !== null) {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        window.togglePasswordVisibility = function() {
+            const input = document.getElementById('input-password');
+            const icon = document.getElementById('toggle-pass-icon');
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        };
+
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            const passInput = document.getElementById('input-password');
+            const errorEl = document.getElementById('login-error');
+            const val = passInput ? passInput.value.trim() : '';
+
+            if (val === PASS_SUPERVISOR) {
+                sessionStorage.setItem('POS_LOGBOOK_AUTHENTICATED', 'true');
+                sessionStorage.setItem('POS_LOGBOOK_ROLE', 'SUPERVISOR');
+                if (errorEl) errorEl.classList.add('hidden');
+                checkAuthentication();
+                showToast('Berhasil masuk sebagai Supervisor!', 'success');
+            } else if (val === PASS_PERSONEL || val === PASS_PERSONEL_ALT) {
+                sessionStorage.setItem('POS_LOGBOOK_AUTHENTICATED', 'true');
+                sessionStorage.setItem('POS_LOGBOOK_ROLE', 'PERSONEL');
+                if (errorEl) errorEl.classList.add('hidden');
+                checkAuthentication();
+                showToast('Berhasil masuk sebagai Personel Security!', 'success');
+            } else {
+                if (errorEl) errorEl.classList.remove('hidden');
+                showToast('Kata sandi salah!', 'error');
+            }
+        };
+
+        window.lockApp = function() {
+            sessionStorage.removeItem('POS_LOGBOOK_AUTHENTICATED');
+            sessionStorage.removeItem('POS_LOGBOOK_ROLE');
+            checkAuthentication();
+            showToast('Sistem berhasil dikunci', 'info');
+        };
+
+        window.openSupervisorModal = function(targetTab = null) {
+            targetTabAfterAuth = targetTab;
+            const modal = document.getElementById('supervisor-auth-modal');
+            const passInput = document.getElementById('input-supervisor-pass');
+            const errEl = document.getElementById('supervisor-error');
+            if (passInput) passInput.value = '';
+            if (errEl) errEl.classList.add('hidden');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeSupervisorModal = function() {
+            const modal = document.getElementById('supervisor-auth-modal');
+            if (modal) modal.classList.add('hidden');
+            targetTabAfterAuth = null;
+        };
+
+        window.handleSupervisorUpgrade = function(event) {
+            event.preventDefault();
+            const passInput = document.getElementById('input-supervisor-pass');
+            const errEl = document.getElementById('supervisor-error');
+            const val = passInput ? passInput.value.trim() : '';
+
+            if (val === PASS_SUPERVISOR) {
+                sessionStorage.setItem('POS_LOGBOOK_ROLE', 'SUPERVISOR');
+                if (errEl) errEl.classList.add('hidden');
+                window.closeSupervisorModal();
+                updateUserRoleBadge('SUPERVISOR');
+                showToast('Akses Supervisor Berhasil Diverifikasi!', 'success');
+                
+                if (targetTabAfterAuth) {
+                    window.switchTab(targetTabAfterAuth);
+                } else {
+                    window.filterMonthlyRecap();
+                    renderHistoryTable();
+                }
+            } else {
+                if (errEl) errEl.classList.remove('hidden');
+                showToast('Kata sandi Supervisor salah!', 'error');
+            }
+        };
+
+        window.openFirebaseConfigModal = function() {
+            const modal = document.getElementById('firebase-config-modal');
+            const inputConfig = document.getElementById('input-firebase-config');
+            const domainInfo = document.getElementById('firebase-project-domain');
+            if (!modal || !inputConfig) return;
+
+            const currentConfig = getActiveFirebaseConfig();
+            inputConfig.value = JSON.stringify(currentConfig, null, 2);
+            if (domainInfo && currentConfig) {
+                domainInfo.innerText = currentConfig.authDomain || `${currentConfig.projectId}.firebaseapp.com`;
+            }
+            modal.classList.remove('hidden');
+        };
+
+        window.closeFirebaseConfigModal = function() {
+            const modal = document.getElementById('firebase-config-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.saveFirebaseConfig = async function() {
+            const inputConfig = document.getElementById('input-firebase-config');
+            if (!inputConfig) return;
+
+            try {
+                const parsed = JSON.parse(inputConfig.value.trim());
+                if (!parsed.apiKey || !parsed.projectId) {
+                    throw new Error("JSON harus memiliki 'apiKey' dan 'projectId'!");
+                }
+                localStorage.setItem('POS_LOGBOOK_FIREBASE_CONFIG', JSON.stringify(parsed));
+                window.closeFirebaseConfigModal();
+                showToast('Konfigurasi Firebase disalin. Menghubungkan ulang ke Cloud...', 'info');
+                await initCloudAuth();
+            } catch (e) {
+                showToast('Format JSON tidak valid: ' + e.message, 'error');
+            }
+        };
+
+        window.resetFirebaseConfig = async function() {
+            localStorage.removeItem('POS_LOGBOOK_FIREBASE_CONFIG');
+            window.closeFirebaseConfigModal();
+            showToast('Konfigurasi Firebase direset ke bawaan.', 'info');
+            await initCloudAuth();
+        };
+
+        window.printMonthlyRecap = function() {
+            if (sessionStorage.getItem('POS_LOGBOOK_ROLE') !== 'SUPERVISOR') {
+                showToast('Hanya Supervisor yang dapat mencetak rekapan bulanan!', 'warning');
+                window.openSupervisorModal();
+                return;
+            }
+
+            try {
+                const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+                const monthSelect = document.getElementById('recap-month');
+                const yearSelect = document.getElementById('recap-year');
+                const posSelect = document.getElementById('recap-pos');
+
+                const monthIndex = parseInt(monthSelect.value) - 1;
+                const monthText = monthNames[monthIndex];
+                const yearText = yearSelect.value;
+                const posText = posSelect.value === 'ALL' ? 'SEMUA AREA' : posSelect.value;
+
+                const recapRows = getFilteredRecapData();
+
+                let dailyDocsHtml = '';
+
+                if (recapRows.length === 0) {
+                    dailyDocsHtml = '<div class="p-8 text-center font-bold">Tidak ada data logbook untuk dicetak pada periode ini.</div>';
+                } else {
+                    recapRows.forEach((item, index) => {
+                        const p = item.payload;
+                        
+                        let petugasHtml = '';
+                        if (p.petugas && p.petugas.length > 0) {
+                            p.petugas.forEach((pet, pi) => {
+                                petugasHtml += `
+                                    <tr>
+                                        <td class="text-center font-mono">${pi + 1}</td>
+                                        <td class="font-semibold">${escapeHtml(pet.nama) || '#N/A'}</td>
+                                        <td>${escapeHtml(pet.jabatan)}</td>
+                                        <td>${escapeHtml(pet.keterangan)}</td>
+                                    </tr>
+                                `;
+                            });
+                        } else {
+                            petugasHtml = '<tr><td colspan="4" class="text-center">#N/A</td></tr>';
+                        }
+
+                        let kegHtml = '';
+                        if (p.kegiatan && p.kegiatan.length > 0) {
+                            p.kegiatan.forEach((keg) => {
+                                kegHtml += `
+                                    <tr>
+                                        <td class="text-center font-mono font-semibold">${escapeHtml(keg.waktu)}</td>
+                                        <td>${escapeHtml(keg.uraian) || '#N/A'}</td>
+                                    </tr>
+                                `;
+                            });
+                        } else {
+                            kegHtml = '<tr><td colspan="2" class="text-center">#N/A</td></tr>';
+                        }
+
+                        const sigs = p.signatures || {};
+                        const peng = p.pengesahan || {};
+                        const catatanText = escapeHtml(p.catatan) || '-';
+                        const logbookTitle = p.pos === 'PSCP' ? 'LOGBOOK PSCP' : 'LOGBOOK HBSCP';
+
+                        dailyDocsHtml += `
+                            <div class="logbook-doc-page ${index < recapRows.length - 1 ? 'page-break' : ''} pt-4 font-sans">
+                                <div class="border-2 border-black mb-4 p-2 text-center">
+                                    <h2 class="text-xl font-bold uppercase tracking-wider">${logbookTitle}</h2>
+                                    <div class="flex justify-end items-center mt-2 font-bold text-sm px-4">
+                                        <div>TANGGAL: <span>${formatDateIndo(p.tanggal)}</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <table class="w-full table-border-pdf">
+                                        <thead>
+                                            <tr class="bg-gray-100 font-bold">
+                                                <th class="w-10 text-center">NO</th>
+                                                <th>PETUGAS JAGA TERMINAL</th>
+                                                <th>JABATAN</th>
+                                                <th>KETERANGAN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${petugasHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mb-4">
+                                    <table class="w-full table-border-pdf">
+                                        <thead>
+                                            <tr class="bg-gray-100 font-bold">
+                                                <th class="w-24 text-center">WAKTU</th>
+                                                <th>URAIAN KEGIATAN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${kegHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mb-6">
+                                    <table class="w-full table-border-pdf">
+                                        <thead>
+                                            <tr class="bg-gray-100 font-bold">
+                                                <th class="text-left">CATATAN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="whitespace-pre-wrap text-xs py-2 text-left min-h-[35px]">${catatanText}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mt-8 border-t border-black pt-4">
+                                    <table class="w-full text-center table-border-pdf">
+                                        <thead>
+                                            <tr class="bg-gray-100 font-bold">
+                                                <th class="w-1/2">KANIT AVSEC</th>
+                                                <th class="w-1/2">SUPERVISOR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="h-36 align-bottom pb-2">
+                                                    <div class="h-28 flex items-center justify-center">
+                                                        ${sigs.mengetahui ? `<img src="${sigs.mengetahui}" class="max-h-24 max-w-full object-contain" alt="Sig">` : `<span class="text-xs text-gray-400 italic">(Belum TTD)</span>`}
+                                                    </div>
+                                                    <div class="font-bold border-t border-gray-400 pt-1">${escapeHtml(peng.mengetahui) || '#N/A'}</div>
+                                                </td>
+                                                <td class="h-36 align-bottom pb-2">
+                                                    <div class="h-28 flex items-center justify-center">
+                                                        ${(sigs.supervisor || sigs.danru) ? `<img src="${sigs.supervisor || sigs.danru}" class="max-h-24 max-w-full object-contain" alt="Sig">` : `<span class="text-xs text-gray-400 italic">(Belum TTD)</span>`}
+                                                    </div>
+                                                    <div class="font-bold border-t border-gray-400 pt-1">${escapeHtml(peng.supervisor || peng.danru) || '#N/A'}</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                const title = `REKAPAN_LOGBOOK_TERMINAL_${posText}_${monthText}_${yearText}`;
+                fallbackPopupPrint(dailyDocsHtml, title);
+                showToast('Jendela cetak rekapan bulanan dibuka!', 'success');
+            } catch (err) {
+                console.error("Error printing monthly recap:", err);
+                showToast("Gagal mencetak rekapan: " + err.message, "error");
+            }
+        };
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            
+            let bgBg = 'bg-slate-800 border-slate-700 text-slate-100';
+            let icon = '<i class="fa-solid fa-circle-info text-blue-400"></i>';
+
+            if (type === 'success') {
+                bgBg = 'bg-slate-900 border-emerald-500/50 text-emerald-300';
+                icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            } else if (type === 'error') {
+                bgBg = 'bg-slate-900 border-rose-500/50 text-rose-300';
+                icon = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i>';
+            } else if (type === 'warning') {
+                bgBg = 'bg-slate-900 border-amber-500/50 text-amber-300';
+                icon = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>';
+            }
+
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl text-xs font-medium flex items-center gap-2.5 transition transform translate-y-2 opacity-0 ${bgBg}`;
+            toast.innerHTML = `${icon} <span>${escapeHtml(message)}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function formatDateIndo(dateStr) {
+            if (!dateStr) return '';
+            let d, m, y;
+            if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                dateStr = dateStr.split('T')[0];
+            }
+            const str = String(dateStr).trim();
+            const parts = str.split(/[-/]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) { // YYYY-MM-DD
+                    y = parseInt(parts[0], 10);
+                    m = parseInt(parts[1], 10);
+                    d = parseInt(parts[2], 10);
+                } else if (parts[2].length === 4) { // DD-MM-YYYY
+                    y = parseInt(parts[2], 10);
+                    d = parseInt(parts[0], 10);
+                    m = parseInt(parts[1], 10);
+                }
+            }
+            if (d && m && y) {
+                const padD = String(d).padStart(2, '0');
+                const padM = String(m).padStart(2, '0');
+                return `${padD}/${padM}/${y}`;
+            }
+            return str;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
